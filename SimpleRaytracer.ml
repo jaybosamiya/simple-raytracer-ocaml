@@ -74,8 +74,8 @@ let rec ray_extend_aux r spc : color =
     match sphere_hit (Sphere (center,rad,col)) r with
     | Some (hit,n) ->
        let open RayOps in
-       let d = norm r.dirn in
-       let cosTheta = Float.abs (dot n d) in
+       let d = norm { x= -. 1.0 ; y= -. 1.0 ; z= 0.5 } in
+       let cosTheta = Float.max (dot n d) 0. in
        let col = { r = col.r *. cosTheta ;
                    g = col.g *. cosTheta ;
                    b = col.b *. cosTheta } in
