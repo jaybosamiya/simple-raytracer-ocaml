@@ -67,36 +67,36 @@ let sphere_hit (Sphere (center,rad,_)) {origin; dirn}
         (hit, n)
       )
 
-let rec ray_extend_aux r spc : color =
+let rec ray_extend_aux r spc light : color =
   match spc with
   | [] -> black
   | Sphere (center,rad,col) :: spc' -> (
     match sphere_hit (Sphere (center,rad,col)) r with
     | Some (hit,n) ->
        let open RayOps in
-       let d = norm { x= -. 1.0 ; y= -. 1.0 ; z= 0.5 } in
+       let d = norm light in
        let cosTheta = Float.max (dot n d) 0. in
        let col = { r = col.r *. cosTheta ;
                    g = col.g *. cosTheta ;
                    b = col.b *. cosTheta } in
        col
     | None ->
-       ray_extend_aux r spc'
+       ray_extend_aux r spc' light
   )
 
-let ray_extend r spc : color =
-  ray_extend_aux r spc
+let ray_extend r spc light : color =
+  ray_extend_aux r spc light
 
 let create_viewport_ray x y =
   { origin = { x = float_of_int x ; y = float_of_int y ; z = 0. } ;
     dirn = { x = 0. ; y = 0. ; z = 1. } }
 
-let ray_trace width height spc : viewport =
+let ray_trace width height spc light : viewport =
   fun x y ->
   if x < 0 || x >= width then assert false else
     if y < 0 || y >= height then assert false else (
       let r = create_viewport_ray x y in
-      ray_extend r spc
+      ray_extend r spc light
     )
 
 (* ************************************* *)
@@ -131,9 +131,10 @@ let print_ppm p =
 
 let _ =
   let w, h = 640, 360 in
+  let light = { x= -. 1.0 ; y= -. 1.0 ; z= 0.5 } in
   let spc = [
       Sphere ({x=320.; y=180.; z=100.}, 100., red)
     ] in
-  let v = ray_trace w h spc in
+  let v = ray_trace w h spc light in
   let p = { height = h; width = w; max = 255; pixels = v } in
   print_ppm p
