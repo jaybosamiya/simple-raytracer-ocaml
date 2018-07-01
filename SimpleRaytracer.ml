@@ -67,25 +67,39 @@ let sphere_hit (Sphere (center,rad,_)) {origin; dirn}
         (hit, n)
       )
 
-let rec ray_extend_aux r spc light : color =
+let rec ray_extend_aux r spc light : (color * point3) option =
   match spc with
-  | [] -> black
+  | [] -> None
   | Sphere (center,rad,col) :: spc' -> (
     match sphere_hit (Sphere (center,rad,col)) r with
-    | Some (hit,n) ->
-       let open RayOps in
-       let d = norm light in
-       let cosTheta = Float.max (dot n d) 0. in
-       let col = { r = col.r *. cosTheta ;
-                   g = col.g *. cosTheta ;
-                   b = col.b *. cosTheta } in
-       col
+    | Some (hit1,n) ->
+       let col1 =
+         let open RayOps in
+         let d = norm light in
+         let cosTheta = Float.max (dot n d) 0. in
+         { r = col.r *. cosTheta ;
+           g = col.g *. cosTheta ;
+           b = col.b *. cosTheta } in
+       (match ray_extend_aux r spc' light with
+        | None -> Some (col1, hit1)
+        | Some (col2, hit2) ->
+           let open RayOps in
+           let dv1 = sub hit1 r.origin in
+           let dv2 = sub hit2 r.origin in
+           let d1 = dot dv1 dv1 in
+           let d2 = dot dv2 dv2 in
+           if d1 < d2 then
+             Some (col1, hit1)
+           else
+             Some (col2, hit2))
     | None ->
        ray_extend_aux r spc' light
   )
 
 let ray_extend r spc light : color =
-  ray_extend_aux r spc light
+  match ray_extend_aux r spc light with
+  | None -> black
+  | Some (col, _) -> col
 
 let create_viewport_ray x y persp =
   let open RayOps in
