@@ -133,7 +133,9 @@ let _ =
   let w, h = 640, 360 in
   let light = { x= -. 1.0 ; y= -. 1.0 ; z= 0.5 } in
   let spc = [
-      Sphere ({x=320.; y=180.; z=100.}, 100., red)
+      Sphere ({x=320.; y=180.; z=100.}, 100., red);
+      Sphere ({x=200.; y=220.; z=80.}, 100., green);
+      Sphere ({x=480.; y=220.; z=120.}, 100., blue);
     ] in
   let v = ray_trace w h spc light in
   let p = { height = h; width = w; max = 255; pixels = v } in
