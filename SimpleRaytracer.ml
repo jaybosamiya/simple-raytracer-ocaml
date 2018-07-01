@@ -28,17 +28,27 @@ let red = { r = 1.0 ; g = 0.0 ; b = 0.0 }
 let green = { r = 0.0 ; g = 1.0 ; b = 0.0 }
 let blue = { r = 0.0 ; g = 0.0 ; b = 1.0 }
 
-let sphere_hit (Sphere (center,rad,_)) {origin; dirn}
-    : point3 option =
+module RayOps = struct
   let dot { x=x1 ; y=y1 ; z=z1 } { x=x2 ; y=y2 ; z=z2 } =
-    (x1 *. x2) +. (y1 *. y2) +. (z1 *. z2) in
+    (x1 *. x2) +. (y1 *. y2) +. (z1 *. z2)
+
   let add { x=x1 ; y=y1 ; z=z1 } { x=x2 ; y=y2 ; z=z2 } =
-    { x = x1+.x2 ; y = y1+.y2 ; z = z1+.z2 } in
+    { x = x1+.x2 ; y = y1+.y2 ; z = z1+.z2 }
+
   let sub { x=x1 ; y=y1 ; z=z1 } { x=x2 ; y=y2 ; z=z2 } =
-    { x = x1-.x2 ; y = y1-.y2 ; z = z1-.z2 } in
-  let div { x ; y ; z } v = { x = x/.v ; y = y/.v ; z = z/.v } in
-  let mul { x ; y ; z } v = { x = x*.v ; y = y*.v ; z = z*.v } in
-  let norm v = div v (sqrt (dot v v)) in
+    { x = x1-.x2 ; y = y1-.y2 ; z = z1-.z2 }
+
+  let div { x ; y ; z } v = { x = x/.v ; y = y/.v ; z = z/.v }
+
+  let mul { x ; y ; z } v = { x = x*.v ; y = y*.v ; z = z*.v }
+
+  let norm v = div v (sqrt (dot v v))
+end
+
+(* Returns (point of hit * normal), if it exists *)
+let sphere_hit (Sphere (center,rad,_)) {origin; dirn}
+    : (point3 * point3) option =
+  let open RayOps in
   let sqr x = x *. x in
   let s = origin in
   let c = center in
@@ -48,10 +58,13 @@ let sphere_hit (Sphere (center,rad,_)) {origin; dirn}
   let delta = sqr (dot v d) -. ((dot v v) -. sqr r) in
   if delta < 0. then None else
     Some (
-        let t1 = (-. (dot v d)) +. sqrt delta in
-        let t2 = (-. (dot v d)) -. sqrt delta in
-        let t = min t1 t2 in
-        add s (mul d t)
+        let hit =
+          let t1 = (-. (dot v d)) +. sqrt delta in
+          let t2 = (-. (dot v d)) -. sqrt delta in
+          let t = min t1 t2 in
+          add s (mul d t) in
+        let n = norm (sub hit c) in
+        (hit, n)
       )
 
 let rec ray_extend_aux r spc : color =
@@ -59,8 +72,13 @@ let rec ray_extend_aux r spc : color =
   | [] -> black
   | Sphere (center,rad,col) :: spc' -> (
     match sphere_hit (Sphere (center,rad,col)) r with
-    | Some _ ->
-       (* TODO: Look into reflections if need be *)
+    | Some (hit,n) ->
+       let open RayOps in
+       let d = norm r.dirn in
+       let cosTheta = Float.abs (dot n d) in
+       let col = { r = col.r *. cosTheta ;
+                   g = col.g *. cosTheta ;
+                   b = col.b *. cosTheta } in
        col
     | None ->
        ray_extend_aux r spc'
