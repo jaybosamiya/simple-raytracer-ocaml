@@ -148,7 +148,7 @@ let print_ppm p =
 
 let _ =
   let w, h = 640, 360 in
-  let light = { x= -. 0.0 ; y= -. 0.0 ; z= -. 0.5 } in
+  let light = { x= -. 0.4 ; y= -. 0.4 ; z= -. 0.5 } in
   let persp = { x= float_of_int w /. 2. ; y= float_of_int h /. 2. ; z = -. 200. } in
   let spc = [
       Sphere ({x=320.; y=160.; z=80.}, 100., red);
