@@ -87,15 +87,17 @@ let rec ray_extend_aux r spc light : color =
 let ray_extend r spc light : color =
   ray_extend_aux r spc light
 
-let create_viewport_ray x y =
-  { origin = { x = float_of_int x ; y = float_of_int y ; z = 0. } ;
-    dirn = { x = 0. ; y = 0. ; z = 1. } }
+let create_viewport_ray x y persp =
+  let open RayOps in
+  let origin = { x = float_of_int x ; y = float_of_int y ; z = 0. } in
+  let dirn = norm (sub origin persp) in
+  { origin ; dirn }
 
-let ray_trace width height spc light : viewport =
+let ray_trace width height spc light persp : viewport =
   fun x y ->
   if x < 0 || x >= width then assert false else
     if y < 0 || y >= height then assert false else (
-      let r = create_viewport_ray x y in
+      let r = create_viewport_ray x y persp in
       ray_extend r spc light
     )
 
@@ -132,11 +134,12 @@ let print_ppm p =
 let _ =
   let w, h = 640, 360 in
   let light = { x= -. 1.0 ; y= -. 1.0 ; z= 0.5 } in
+  let persp = { x= float_of_int w /. 2. ; y= float_of_int h /. 2. ; z = -. 200. } in
   let spc = [
       Sphere ({x=320.; y=180.; z=100.}, 100., red);
       Sphere ({x=200.; y=220.; z=80.}, 100., green);
       Sphere ({x=480.; y=220.; z=120.}, 100., blue);
     ] in
-  let v = ray_trace w h spc light in
+  let v = ray_trace w h spc light persp in
   let p = { height = h; width = w; max = 255; pixels = v } in
   print_ppm p
