@@ -27,6 +27,7 @@ let black = { r = 0.0 ; g = 0.0 ; b = 0.0 }
 let red = { r = 1.0 ; g = 0.0 ; b = 0.0 }
 let green = { r = 0.0 ; g = 1.0 ; b = 0.0 }
 let blue = { r = 0.0 ; g = 0.0 ; b = 1.0 }
+let white = { r = 1.0 ; g = 1.0 ; b = 1.0 }
 
 module RayOps = struct
   let dot { x=x1 ; y=y1 ; z=z1 } { x=x2 ; y=y2 ; z=z2 } =
@@ -147,12 +148,13 @@ let print_ppm p =
 
 let _ =
   let w, h = 640, 360 in
-  let light = { x= -. 1.0 ; y= -. 1.0 ; z= 0.5 } in
+  let light = { x= -. 0.0 ; y= -. 0.0 ; z= -. 0.5 } in
   let persp = { x= float_of_int w /. 2. ; y= float_of_int h /. 2. ; z = -. 200. } in
   let spc = [
-      Sphere ({x=320.; y=180.; z=100.}, 100., red);
-      Sphere ({x=200.; y=220.; z=80.}, 100., green);
-      Sphere ({x=480.; y=220.; z=120.}, 100., blue);
+      Sphere ({x=320.; y=160.; z=80.}, 100., red);
+      Sphere ({x=160.; y=220.; z=100.}, 100., green);
+      Sphere ({x=480.; y=220.; z=100.}, 100., blue);
+      Sphere ({x=320.; y=2000.; z=700.}, 1800., white);
     ] in
   let v = ray_trace w h spc light persp in
   let p = { height = h; width = w; max = 255; pixels = v } in
